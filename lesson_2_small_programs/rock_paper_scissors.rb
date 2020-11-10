@@ -86,8 +86,7 @@ loop do
 
   prompt("Play again? (y to continue)")
   again = Kernel.gets().chomp()
-  break if not again.match("^[Yy]")
+  break if !again.match("^[Yy]")
 end
 
 prompt("Thank you for playing. Goodbye!")
-
