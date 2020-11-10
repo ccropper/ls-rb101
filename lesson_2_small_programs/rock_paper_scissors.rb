@@ -36,50 +36,58 @@ def display_results(player, computer)
   end
 end
 
-player_wins = 0
-computer_wins = 0
-
-prompt("Welcome to #{VALID_CHOICES.join(', ')}. "\
-       "First to 5 wins is the winner!")
-
 loop do
-  choice = ''
-  loop do
-    prompt("Choose one: r, p, sc, l, sp")
-    choice = Kernel.gets().chomp()
+  player_wins = 0
+  computer_wins = 0
 
-    if VALID_CHOICES.include?(choice)
+  prompt("Welcome to #{VALID_CHOICES.join(', ')}. "\
+         "First to 5 wins is the winner!")
+
+  loop do
+    choice = ''
+    loop do
+      prompt("Choose one: r, p, sc, l, sp")
+      choice = Kernel.gets().chomp()
+
+      if VALID_CHOICES.include?(choice)
+        break
+      elsif SHORTHAND_LOOKUP.include?(choice.to_sym)
+        choice = shorthand_to_full_choice(choice)
+        break
+      else
+        prompt("That's not a valid choice.")
+      end
+    end
+
+    computer_choice = VALID_CHOICES.sample
+
+    Kernel.puts("You chose #{choice}; "\
+                "Computer chose #{computer_choice}.")
+
+    display_results(choice, computer_choice)
+
+    if win?(choice, computer_choice)
+      player_wins += 1
+    elsif win?(computer_choice, choice)
+      computer_wins += 1
+    end
+
+    if player_wins == 5
+      prompt("YOU ARE THE GRAND TOURNAMENT WINNER!!!")
       break
-    elsif SHORTHAND_LOOKUP.include?(choice.to_sym)
-      choice = shorthand_to_full_choice(choice)
+    elsif computer_wins == 5
+      prompt("You lost the tournament...")
       break
-    else
-      prompt("That's not a valid choice.")
     end
   end
 
-  computer_choice = VALID_CHOICES.sample
+  prompt("The final tournament score was #{player_wins} wins for you; "\
+    "#{computer_wins} wins for the computer.")
 
-  Kernel.puts("You chose #{choice}; "\
-              "Computer chose #{computer_choice}.")
-
-  display_results(choice, computer_choice)
-
-  if win?(choice, computer_choice)
-    player_wins += 1
-  elsif win?(computer_choice, choice)
-    computer_wins += 1
-  end
-
-  if player_wins == 5
-    prompt("YOU ARE THE GRAND TOURNAMENT WINNER!!!")
-    break
-  elsif computer_wins == 5
-    prompt("You lost the tournament...")
-    break
-  end
+  prompt("Play again? (y to continue)")
+  again = Kernel.gets().chomp()
+  break if not again.match("^[Yy]")
 end
 
-prompt("The final score was #{player_wins} wins for you; "\
-  "#{computer_wins} wins for the computer.")
 prompt("Thank you for playing. Goodbye!")
+
