@@ -16,12 +16,42 @@ SHORTHAND_LOOKUP = {
   l: 'lizard'
 }
 
+def clear_screen
+  system('clear') || system('cls')
+end
+
 def prompt(message)
   Kernel.puts("=> #{message}")
 end
 
+def display_welcome
+  prompt("Welcome to #{VALID_CHOICES.join(', ')}. ")
+  prompt("First to 5 wins is the winner!")
+end
+
 def shorthand_to_full_choice(shorthand)
   SHORTHAND_LOOKUP[shorthand.to_sym]
+end
+
+def retrieve_user_choice
+  loop do
+    prompt("Choose one: r, p, sc, l, sp")
+    choice = Kernel.gets().chomp()
+
+    if VALID_CHOICES.include?(choice)
+      return choice
+    elsif SHORTHAND_LOOKUP.include?(choice.to_sym)
+      choice = shorthand_to_full_choice(choice)
+      return choice
+    else
+      prompt("That's not a valid choice.")
+    end
+  end
+end
+
+def display_choices(player_choice, computer_choice)
+  Kernel.puts("You chose #{player_choice}; "\
+              "Computer chose #{computer_choice}.")
 end
 
 def win?(first, second)
@@ -33,6 +63,8 @@ def display_results(player, computer)
     prompt("You won this round!")
   elsif win?(computer, player)
     prompt("You lost this round!")
+  else
+    prompt("You tied!")
   end
 end
 
@@ -40,38 +72,21 @@ loop do
   player_wins = 0
   computer_wins = 0
 
-  prompt("Welcome to #{VALID_CHOICES.join(', ')}. "\
-         "First to 5 wins is the winner!")
+  clear_screen
+  display_welcome
 
   loop do
-    choice = ''
-    loop do
-      prompt("Choose one: r, p, sc, l, sp")
-      choice = Kernel.gets().chomp()
-
-      if VALID_CHOICES.include?(choice)
-        break
-      elsif SHORTHAND_LOOKUP.include?(choice.to_sym)
-        choice = shorthand_to_full_choice(choice)
-        break
-      else
-        prompt("That's not a valid choice.")
-      end
-    end
-
+    player_choice = retrieve_user_choice
     computer_choice = VALID_CHOICES.sample
 
-    Kernel.puts("You chose #{choice}; "\
-                "Computer chose #{computer_choice}.")
+    display_choices(player_choice, computer_choice)
+    display_results(player_choice, computer_choice)
 
-    display_results(choice, computer_choice)
-
-    if win?(choice, computer_choice)
+    if win?(player_choice, computer_choice)
       player_wins += 1
-    elsif win?(computer_choice, choice)
+    elsif win?(computer_choice, player_choice)
       computer_wins += 1
     end
-
     if player_wins == 5
       prompt("YOU ARE THE GRAND TOURNAMENT WINNER!!!")
       break
@@ -80,6 +95,7 @@ loop do
       break
     end
   end
+
 
   prompt("The final tournament score was #{player_wins} wins for you; "\
     "#{computer_wins} wins for the computer.")
