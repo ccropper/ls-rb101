@@ -68,18 +68,31 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-def computer_places_piece!(brd)
-  square = empty_squares(brd).sample
+def find_winning_square(brd, marker)
+  square = nil
   WINNING_LINES.each do |line|
-    if brd.values_at(*line).count(PLAYER_MARKER) == 2
-      empty_defensive_square = empty_squares(brd).select do |n|
+    if brd.values_at(*line).count(marker) == 2
+      empty_winning_square = empty_squares(brd).select do |n|
         line.include?(n)
       end
-      if empty_defensive_square.length > 0
-        square = empty_defensive_square[0]
+      if empty_winning_square.length > 0
+        square = empty_winning_square[0]
       end
     end
-  end   
+  end
+  square
+end
+
+def computer_places_piece!(brd)
+  square = nil
+  loop do
+    square = find_winning_square(brd, COMPUTER_MARKER)
+    break if square
+    square = find_winning_square(brd, PLAYER_MARKER)
+    break if square
+    square = empty_squares(brd).sample
+    break
+  end
   brd[square] = COMPUTER_MARKER
 end
 
