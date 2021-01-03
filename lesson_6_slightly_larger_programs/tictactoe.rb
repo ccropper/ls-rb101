@@ -1,6 +1,7 @@
 require 'pry'
 require 'io/console'
 
+FIRST_PLAYER = 'choose'
 
 WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                 [[1, 5, 9], [3, 5, 7], [1, 4, 7]] +
@@ -10,8 +11,8 @@ INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
 
-SCORE = { "Player" => 0,
-          "Computer" => 0 }
+SCORE = { "player" => 0,
+          "computer" => 0 }
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -31,18 +32,33 @@ def joinor(arr,
   joined
 end
 
+def determine_first_player
+  current_player = nil
+  if FIRST_PLAYER == 'choose'
+    loop do 
+      prompt "Who should go first? (computer or player)"
+      current_player = gets.chomp.downcase
+      break if %w(player computer).include?(current_player)
+      prompt "The valid choices are computer or player"
+    end
+  else
+    current_player = FIRST_PLAYER
+  end
+  current_player
+end
+
 def alternate_player(current_player)
-  if current_player == 'Player'
-    'Computer'
+  if current_player == 'player'
+    'computer'
   else 
-    'Player'
+    'player'
   end
 end
 
 # rubocop: disable Metrics/AbcSize
 def display_board(brd)
   system 'clear'
-  puts "You're #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
+  puts "You're #{PLAYER_MARKER}. computer is #{COMPUTER_MARKER}."
   puts ""
   puts "     |     |"
   puts "  #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}"
@@ -72,7 +88,7 @@ end
 
 def place_piece!(brd, current_player)
   square = nil
-  if current_player == 'Player'
+  if current_player == 'player'
     loop do
       prompt "Choose a square (#{joinor(empty_squares(brd))}): "
       square = STDIN.getch.to_i
@@ -86,7 +102,11 @@ def place_piece!(brd, current_player)
       break if square
       square = find_winning_square(brd, PLAYER_MARKER)
       break if square
-      square = empty_squares(brd).sample
+      if empty_squares(brd).include?(5)
+        square = 5
+      else
+        square = empty_squares(brd).sample
+      end
       break
     end
     brd[square] = COMPUTER_MARKER
@@ -145,17 +165,19 @@ def detect_winner(brd)
   WINNING_LINES.each do |line|
     # *line is the same as all values in arr (line[0], line[1], line[2])
     if brd.values_at(*line).count(PLAYER_MARKER) == 3
-      return "Player"
+      return "player"
     elsif brd.values_at(*line).count(COMPUTER_MARKER) == 3
-      return "Computer"
+      return "computer"
     end
   end
   nil
 end
 
+first_player = determine_first_player
+
 loop do
   board = initialize_board
-  current_player = 'Player'
+  current_player = first_player
 
   loop do
     display_board(board)
@@ -176,8 +198,8 @@ loop do
     prompt "It's a tie!"
   end
 
-  prompt "You have #{SCORE['Player']} points."
-  prompt "Computer has #{SCORE['Computer']} points."
+  prompt "You have #{SCORE['player']} points."
+  prompt "Cmputer has #{SCORE['computer']} points."
   break if SCORE.values.any? { |n| n >= 5 }
   prompt "Press any key to continue."
   continue = STDIN.getch
