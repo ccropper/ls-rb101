@@ -173,6 +173,7 @@ def detect_winner(brd)
   nil
 end
 
+prompt "Welcome to Tic-Tac-Toe. First to 5 points wins."
 first_player = determine_first_player
 
 loop do
