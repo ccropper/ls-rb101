@@ -35,7 +35,7 @@ end
 def determine_first_player
   current_player = nil
   if FIRST_PLAYER == 'choose'
-    loop do 
+    loop do
       prompt "Who should go first? (computer or player)"
       current_player = gets.chomp.downcase
       break if %w(player computer).include?(current_player)
@@ -50,7 +50,7 @@ end
 def alternate_player(current_player)
   if current_player == 'player'
     'computer'
-  else 
+  else
     'player'
   end
 end
@@ -87,43 +87,23 @@ def empty_squares(brd)
 end
 
 def place_piece!(brd, current_player)
-  square = nil
   if current_player == 'player'
-    loop do
-      prompt "Choose a square (#{joinor(empty_squares(brd))}): "
-      square = STDIN.getch.to_i
-      break if empty_squares(brd).include?(square)
-      prompt "Sorry, that's not a valid choice"
-    end
-    brd[square] = PLAYER_MARKER
+    player_places_piece!(brd)
   else
-    loop do
-      square = find_winning_square(brd, COMPUTER_MARKER)
-      break if square
-      square = find_winning_square(brd, PLAYER_MARKER)
-      break if square
-      if empty_squares(brd).include?(5)
-        square = 5
-      else
-        square = empty_squares(brd).sample
-      end
-      break
-    end
-    brd[square] = COMPUTER_MARKER
+    computer_places_piece!(brd)
   end
 end
-  
 
-# def player_places_piece!(brd)
-#   square = nil
-#   loop do
-#     prompt "Choose a square (#{joinor(empty_squares(brd))}): "
-#     square = STDIN.getch.to_i
-#     break if empty_squares(brd).include?(square)
-#     prompt "Sorry, that's not a valid choice"
-#   end
-#   brd[square] = PLAYER_MARKER
-# end
+def player_places_piece!(brd)
+  square = nil
+  loop do
+    prompt "Choose a square (#{joinor(empty_squares(brd))}): "
+    square = STDIN.getch.to_i
+    break if empty_squares(brd).include?(square)
+    prompt "Sorry, that's not a valid choice"
+  end
+  brd[square] = PLAYER_MARKER
+end
 
 def find_winning_square(brd, marker)
   square = nil
@@ -140,18 +120,21 @@ def find_winning_square(brd, marker)
   square
 end
 
-# def computer_places_piece!(brd)
-#   square = nil
-#   loop do
-#     square = find_winning_square(brd, COMPUTER_MARKER)
-#     break if square
-#     square = find_winning_square(brd, PLAYER_MARKER)
-#     break if square
-#     square = empty_squares(brd).sample
-#     break
-#   end
-#   brd[square] = COMPUTER_MARKER
-# end
+def computer_places_piece!(brd)
+  square = nil
+  loop do
+    square = find_winning_square(brd, COMPUTER_MARKER)
+    break if square
+    square = find_winning_square(brd, PLAYER_MARKER)
+    break if square
+    square = if empty_squares(brd).include?(5)
+             else
+               empty_squares(brd).sample
+             end
+    break
+  end
+  brd[square] = COMPUTER_MARKER
+end
 
 def board_full?(brd)
   empty_squares(brd).empty?
@@ -173,6 +156,8 @@ def detect_winner(brd)
   nil
 end
 
+system 'clear'
+prompt "Welcome to Tic-Tac-Toe. First to 5 points wins."
 first_player = determine_first_player
 
 loop do
@@ -182,10 +167,7 @@ loop do
   loop do
     display_board(board)
     place_piece!(board, current_player)
-    # player_places_piece!(board)
     break if someone_won?(board) || board_full?(board)
-    # computer_places_piece!(board)
-    # break if someone_won?(board) || board_full?(board)
     current_player = alternate_player(current_player)
   end
 
@@ -206,5 +188,5 @@ loop do
   system 'clear' if continue
 end
 
-prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins a the game with first to 5 points!"
+prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins the game!"
 prompt "Thanks for playing Tic Tac Toe. Goodbye!"
