@@ -37,7 +37,7 @@ def determine_first_player
   if FIRST_PLAYER == 'choose'
     loop do
       prompt "Who should go first? (computer or player)"
-      current_player = gets.chomp.downcase
+      current_player = STDIN.getch.downcase
       if current_player.start_with?('c')
         current_player = 'computer'
         break
