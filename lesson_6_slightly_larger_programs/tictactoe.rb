@@ -1,7 +1,6 @@
-require 'pry'
 require 'io/console'
 
-FIRST_PLAYER = 'choose'
+FIRST_PLAYER = 'player'
 
 WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                 [[1, 5, 9], [3, 5, 7], [1, 4, 7]] +
@@ -10,12 +9,18 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
+GOAL_WINS = 5
 
 SCORE = { "player" => 0,
           "computer" => 0 }
 
 def prompt(msg)
   puts "=> #{msg}"
+end
+
+def display_welcome
+  system 'clear'
+  prompt "Welcome to Tic-Tac-Toe. First to 5 points wins."
 end
 
 def joinor(arr,
@@ -32,30 +37,29 @@ def joinor(arr,
   joined
 end
 
+def press_key_to_continue
+  prompt "Press any key to continue."
+  continue = STDIN.getch
+  system 'clear' if continue
+end
+
 def determine_first_player
   current_player = FIRST_PLAYER
   if FIRST_PLAYER == 'choose'
+    choice = ''
     loop do
       prompt "Who should go first? (computer or player)"
-      current_player = STDIN.getch.downcase
-      if current_player.start_with?('c')
-        current_player = 'computer'
-        break
-      elsif current_player.start_with?('p')
-        current_player = 'player'
-        break
-      end
+      choice = gets.chomp.downcase
+      break if ['c', 'computer', 'p', 'player'].include?(choice)
       prompt "The valid choices are (c)omputer or (p)layer"
     end
+    current_player = choice.start_with?('c') ? 'computer' : 'player'
   end
+  current_player
 end
 
 def alternate_player(current_player)
-  if current_player == 'player'
-    'computer'
-  else
-    'player'
-  end
+  current_player == 'player' ? 'computer' : 'player'
 end
 
 # rubocop: disable Metrics/AbcSize
@@ -101,7 +105,7 @@ def player_places_piece!(brd)
   square = nil
   loop do
     prompt "Choose a square (#{joinor(empty_squares(brd))}): "
-    square = STDIN.getch.to_i
+    square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
     prompt "Sorry, that's not a valid choice"
   end
@@ -130,11 +134,11 @@ def computer_places_piece!(brd)
     break if square
     square = find_winning_square(brd, PLAYER_MARKER)
     break if square
-    if empty_squares(brd).include?(5)
-      square = 5
-    else
-      square = empty_squares(brd).sample
-    end
+    square = if empty_squares(brd).include?(5)
+               5
+             else
+               empty_squares(brd).sample
+             end
     break
   end
   brd[square] = COMPUTER_MARKER
@@ -146,6 +150,20 @@ end
 
 def someone_won?(brd)
   !!detect_winner(brd) # !! turns value into boolean
+end
+
+def display_and_update_score(brd)
+  prompt "+1 point for #{detect_winner(brd)}!"
+  SCORE[detect_winner(brd)] += 1
+end
+
+def display_tie
+  prompt "It's a tie!"
+end
+
+def display_current_scores
+  prompt "You have #{SCORE['player']} points."
+  prompt "Computer has #{SCORE['computer']} points."
 end
 
 def detect_winner(brd)
@@ -160,8 +178,19 @@ def detect_winner(brd)
   nil
 end
 
-system 'clear'
-prompt "Welcome to Tic-Tac-Toe. First to 5 points wins."
+def someone_grand_winner?
+  SCORE.values.any? { |n| n >= GOAL_WINS }
+end
+
+def display_grand_winner
+  prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins the game!"
+end
+
+def display_goodbye
+  prompt "Thanks for playing Tic Tac Toe. Goodbye!"
+end
+
+display_welcome
 first_player = determine_first_player
 
 loop do
@@ -177,20 +206,12 @@ loop do
 
   display_board(board)
 
-  if someone_won?(board)
-    prompt "+1 point for #{detect_winner(board)}!"
-    SCORE[detect_winner(board)] += 1
-  else
-    prompt "It's a tie!"
-  end
+  someone_won?(board) ? display_and_update_score(board) : display_tie
 
-  prompt "You have #{SCORE['player']} points."
-  prompt "Cmputer has #{SCORE['computer']} points."
-  break if SCORE.values.any? { |n| n >= 5 }
-  prompt "Press any key to continue."
-  continue = STDIN.getch
-  system 'clear' if continue
+  display_current_scores
+  break if someone_grand_winner?
+  press_key_to_continue
 end
 
-prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins the game!"
-prompt "Thanks for playing Tic Tac Toe. Goodbye!"
+display_grand_winner
+display_goodbye
