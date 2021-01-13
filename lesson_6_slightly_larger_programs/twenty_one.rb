@@ -76,8 +76,6 @@ def display_hand(hand, dealer=false, hide_card=false)
   end
 end
 
-# hand = [['H', 'A'], ['C', 'J']] # 21
-# hand = [['S', '9'], ['C', 'J'], ['H', 'A']] # 20
 def calculate_hand_total(hand)
   hand_values = hand.map { |card| CARD_VALUES[card[1]][0] }
   hand_total = hand_values.sum
@@ -108,6 +106,7 @@ def player_turn!(hand, deck)
         prompt("You bust!")
         break
       end
+    else prompt("That's not a valid option.")
     end
   end
   hand
@@ -181,7 +180,7 @@ def someone_grand_winner?
 end
 
 def display_grand_winner
-  prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins best out of 5!"
+  prompt "#{SCORE.max_by { |_, wins| wins }[0]} wins best out of #{GOAL_WINS}!"
 end
 
 def display_goodbye
