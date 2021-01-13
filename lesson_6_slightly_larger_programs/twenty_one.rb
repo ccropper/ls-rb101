@@ -192,7 +192,6 @@ def reset_scores
   SCORE["Dealer"] = 0
 end
 
-
 loop do
   display_welcome
   reset_scores
