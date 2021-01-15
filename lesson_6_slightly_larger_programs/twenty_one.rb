@@ -1,3 +1,4 @@
+require 'pry'
 require 'io/console'
 
 GOAL_SCORE = 21
@@ -7,17 +8,9 @@ GOAL_WINS = 5
 SCORE = { "Player" => 0,
           "Dealer" => 0 }
 
-FULL_DECK = [['H', 'A'], ['H', '2'], ['H', '3'], ['H', '4'], ['H', '5'],
-             ['H', '6'], ['H', '7'], ['H', '8'], ['H', '9'], ['H', '10'],
-             ['H', 'J'], ['H', 'Q'], ['H', 'K'], ['D', 'A'], ['D', '2'],
-             ['D', '3'], ['D', '4'], ['D', '5'], ['D', '6'], ['D', '7'],
-             ['D', '8'], ['D', '9'], ['D', '10'], ['D', 'J'], ['D', 'Q'],
-             ['D', 'K'], ['S', 'A'], ['S', '2'], ['S', '3'], ['S', '4'],
-             ['S', '5'], ['S', '6'], ['S', '7'], ['S', '8'], ['S', '9'],
-             ['S', '10'], ['S', 'J'], ['S', 'Q'], ['S', 'K'], ['C', 'A'],
-             ['C', '2'], ['C', '3'], ['C', '4'], ['C', '5'], ['C', '6'],
-             ['C', '7'], ['C', '8'], ['C', '9'], ['C', '10'], ['C', 'J'],
-             ['C', 'Q'], ['C', 'K']]
+SUITS = %w(H S C D)
+VALUES = %w(A 2 3 4 5 6 7 8 9 10 J Q K)
+FULL_DECK = SUITS.product(VALUES)
 
 CARD_VALUES = { 'A' => [11, 1],
                 '2' => [2],
@@ -46,6 +39,7 @@ end
 def display_welcome
   system 'clear'
   prompt "Welcome to #{GOAL_SCORE}."
+  prompt "First to #{GOAL_WINS} points wins."
   puts "----------------------------------"
 end
 
@@ -69,16 +63,23 @@ def display_hand(hand, dealer=false, hide_card=false)
     prompt("Dealer's hand: #{cards_to_display} plus an unknown card.")
   elsif dealer
     cards_to_display = joinor(hand.map { |n| n[1] })
-    prompt("Dealer hand: #{cards_to_display}.")
+    prompt("Dealer hand: #{cards_to_display} " \
+      "for a total of #{calculate_hand_total(hand)}.")
   else
     cards_to_display = joinor(hand.map { |n| n[1] })
-    prompt("Your hand: #{cards_to_display}.")
+    prompt("Your hand: #{cards_to_display} " \
+      "for a total of #{calculate_hand_total(hand)}.")
   end
 end
 
 def calculate_hand_total(hand)
   hand_values = hand.map { |card| CARD_VALUES[card[1]][0] }
   hand_total = hand_values.sum
+  hand_total = calculate_for_aces(hand, hand_total)
+  hand_total
+end
+
+def calculate_for_aces(hand, hand_total)
   if hand_total > GOAL_SCORE
     aces = hand.count { |_, value| value == 'A' }
     aces.times do
@@ -94,11 +95,20 @@ def busted?(hand)
   calculate_hand_total(hand) > GOAL_SCORE
 end
 
+def validate_choice(allowed_choices)
+  answer = nil
+  loop do
+    answer = gets.chomp.downcase
+    break if allowed_choices.include?(answer)
+    prompt("Please choose a valid option (#{allowed_choices.join(' ')}).")
+  end
+  answer
+end
+
 def player_turn!(hand, deck)
   loop do
-    prompt("Do you want to hit or stay?")
-    answer = gets.chomp.downcase
-    break if answer.start_with?('s')
+    prompt("Do you want to hit or stay (h or s)?")
+    answer = validate_choice(%w(hit stay h s))
     if answer.start_with?('h')
       hand.append(deck.shift(1)[0])
       display_hand(hand)
@@ -106,7 +116,8 @@ def player_turn!(hand, deck)
         prompt("You bust!")
         break
       end
-    else prompt("That's not a valid option.")
+    else
+      break
     end
   end
   hand
@@ -118,7 +129,7 @@ def dealer_turn!(hand, deck)
     break if hand_total >= GOAL_SCORE - 4
     prompt("Dealer hits...")
     hand.append(deck.shift(1)[0])
-    display_hand(hand, dealer=true, hide_card=true)
+    display_hand(hand, dealer = true, hide_card = true)
     if busted?(hand)
       prompt("Dealer busts!")
       break
@@ -129,7 +140,7 @@ end
 
 def reveal_hands(player_hand, dealer_hand)
   prompt("Revealing hands...")
-  display_hand(dealer_hand, dealer=true)
+  display_hand(dealer_hand, dealer = true, hide_card = false)
   display_hand(player_hand)
 end
 
@@ -171,7 +182,7 @@ end
 def play_again?
   puts "----------------------------------"
   prompt "Do you want to play again? (y or n)"
-  answer = gets.chomp
+  answer = validate_choice(%w(yes no y n))
   answer.downcase.start_with?('y')
 end
 
@@ -200,7 +211,7 @@ loop do
     player_hand = current_deck.shift(2)
     dealer_hand = current_deck.shift(2)
 
-    display_hand(dealer_hand, dealer=true, hide_card=true)
+    display_hand(dealer_hand, dealer = true, hide_card = true)
     display_hand(player_hand)
 
     loop do
